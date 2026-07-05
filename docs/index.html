@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071118">
+  <title>HTML 作品库</title>
+  <style>
+    :root{color-scheme:dark;--bg:#071118;--card:#0d1c26;--line:#1d3e50;--text:#eaf8ff;--muted:#87a9ba;--green:#baff32;--blue:#57d8ff}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"PingFang SC",sans-serif}body{padding:max(28px,env(safe-area-inset-top)) 18px max(30px,env(safe-area-inset-bottom))}.wrap{width:min(760px,100%);margin:auto}header{padding:12px 2px 26px}h1{margin:0;font-size:clamp(30px,9vw,54px);letter-spacing:.04em}header p{margin:10px 0 0;color:var(--muted);line-height:1.6}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px}.card{display:block;min-height:148px;padding:20px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#102531,#09161e);color:inherit;text-decoration:none;box-shadow:0 14px 40px rgba(0,0,0,.2);transition:.18s}.card:active{transform:scale(.98)}.tag{display:inline-block;padding:5px 9px;border-radius:999px;background:#17313c;color:var(--blue);font-size:12px;font-weight:800}.card h2{margin:17px 0 7px;font-size:22px}.card p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}.arrow{float:right;color:var(--green);font-size:24px}footer{padding:28px 2px 0;color:#587789;font-size:12px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>HTML 作品库</h1>
+      <p>互动网页、视觉实验与课程创意。点击作品即可在手机浏览器中直接体验。</p>
+    </header>
+    <section class="grid" aria-label="作品目录">
+      <a class="card" href="./reflection-target/">
+        <span class="arrow">›</span><span class="tag">数学动画</span>
+        <h2>反射打靶</h2><p>拖动镜面上的点，发射并修正误差，尝试击中目标。</p>
+      </a>
+      <a class="card" href="./fraction-cut-king/">
+        <span class="arrow">›</span><span class="tag">数学动画</span>
+        <h2>分数切割王</h2><p>凭感觉转动半径，切出指定比例的扇形区域。</p>
+      </a>
+      <a class="card" href="./ratio-color-master/">
+        <span class="arrow">›</span><span class="tag">数学动画</span>
+        <h2>比例调色师</h2><p>调节 A、B 颜料比例，用视觉估算调出目标颜色。</p>
+      </a>
+    </section>
+    <footer>持续更新 · 所有作品均为纯静态网页</footer>
+  </main>
+</body>
+</html>
