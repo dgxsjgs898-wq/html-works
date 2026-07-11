@@ -1,0 +1,1402 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>风的邮差 V1</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: #091021;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #091021;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+      color: #eef6ff;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      background: #091021;
+    }
+
+    .hud {
+      position: fixed;
+      inset: calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) auto calc(12px + var(--safe-left));
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .pill,
+    .icon-button {
+      min-height: 44px;
+      border: 1px solid rgba(178, 224, 255, 0.24);
+      background: rgba(9, 16, 33, 0.48);
+      color: #f2fbff;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(10px);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 44px;
+      padding: 0 11px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+      transition: opacity 260ms ease, transform 260ms ease;
+    }
+
+    .pill.hud-full {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .hud.tutorial .pill.hud-full {
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+    }
+
+    .pill .label {
+      color: #9db8d8;
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .icon-button {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .icon-button svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: calc(28px + var(--safe-top)) calc(18px + var(--safe-right)) calc(28px + var(--safe-bottom)) calc(18px + var(--safe-left));
+      z-index: 5;
+      background: linear-gradient(180deg, rgba(5, 8, 18, 0.28), rgba(5, 8, 18, 0.70));
+    }
+
+    .panel {
+      width: min(440px, 100%);
+      border: 1px solid rgba(194, 227, 255, 0.28);
+      background: rgba(8, 15, 30, 0.74);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38);
+      backdrop-filter: blur(16px);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(30px, 9vw, 48px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: #bfd2eb;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .brief {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 18px;
+      padding: 0;
+      list-style: none;
+      color: #d9ebff;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .primary {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 8px;
+      background: #f3b04d;
+      color: #15100a;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + var(--safe-bottom));
+      transform: translateX(-50%);
+      z-index: 6;
+      min-height: 40px;
+      max-width: min(420px, calc(100vw - 32px));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 14px;
+      border-radius: 8px;
+      background: rgba(13, 23, 43, 0.72);
+      border: 1px solid rgba(187, 227, 255, 0.22);
+      color: #edf8ff;
+      font-size: 14px;
+      font-weight: 700;
+      pointer-events: none;
+      backdrop-filter: blur(10px);
+    }
+
+    @media (max-width: 380px) {
+      .pill {
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      .hud {
+        gap: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" aria-label="风的邮差游戏画布"></canvas>
+
+  <div class="hud" aria-live="polite">
+    <div class="stats">
+      <div class="pill hud-full"><span class="label">分数</span><span id="score">0</span></div>
+      <div class="pill hud-full"><span class="label">连击</span><span id="combo">x1.0</span></div>
+      <div class="pill"><span class="label">信</span><span id="letters">10</span></div>
+      <div class="pill hud-full"><span class="label">暖光</span><span id="warmth">3</span></div>
+      <div class="pill"><span class="label">窗</span><span id="windows">0/8</span></div>
+    </div>
+    <div class="controls">
+      <button class="icon-button" id="pauseBtn" title="暂停" aria-label="暂停">
+        <svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>
+      </button>
+      <button class="icon-button" id="muteBtn" title="静音" aria-label="静音">
+        <svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path id="soundWave" d="M16 9a5 5 0 0 1 0 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="overlay" id="startOverlay">
+    <section class="panel">
+      <h1>风的邮差</h1>
+      <p class="subtitle">撑开纸伞，借风滑翔，把发光信件投进夜镇的窗。</p>
+      <ul class="brief">
+        <li>单指拖动调整伞姿，短点按投递。</li>
+        <li>顺风会加速，上升风会托起小狐狸。</li>
+        <li>点亮 6 扇窗完成邮差任务，8 扇窗全城点亮。</li>
+      </ul>
+      <button class="primary" id="startBtn">开始投递</button>
+    </section>
+  </div>
+
+  <div class="overlay hidden" id="endOverlay">
+    <section class="panel">
+      <h1 id="endTitle">结算</h1>
+      <p class="subtitle" id="endText"></p>
+      <ul class="brief" id="endStats"></ul>
+      <button class="primary" id="restartBtn">再飞一次</button>
+    </section>
+  </div>
+
+  <div class="toast" id="toast">拖动纸伞接风，点按投递练习信</div>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d", { alpha: false });
+      const ui = {
+        hud: document.querySelector(".hud"),
+        score: document.getElementById("score"),
+        combo: document.getElementById("combo"),
+        letters: document.getElementById("letters"),
+        warmth: document.getElementById("warmth"),
+        windows: document.getElementById("windows"),
+        toast: document.getElementById("toast"),
+        startOverlay: document.getElementById("startOverlay"),
+        endOverlay: document.getElementById("endOverlay"),
+        endTitle: document.getElementById("endTitle"),
+        endText: document.getElementById("endText"),
+        endStats: document.getElementById("endStats"),
+        startBtn: document.getElementById("startBtn"),
+        restartBtn: document.getElementById("restartBtn"),
+        pauseBtn: document.getElementById("pauseBtn"),
+        muteBtn: document.getElementById("muteBtn"),
+        soundWave: document.getElementById("soundWave"),
+      };
+
+      const TAU = Math.PI * 2;
+      const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const smooth = (current, target, seconds, dt) => lerp(current, target, 1 - Math.exp(-dt / seconds));
+      const SKIP_TUTORIAL = false;
+
+      let dpr = 1;
+      let W = 0;
+      let H = 0;
+      let reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const state = {
+        mode: "start",
+        time: 0,
+        scroll: 0,
+        score: 0,
+        combo: 0,
+        letters: 10,
+        warmth: 3,
+        delivered: 0,
+        missed: 0,
+        collisions: 0,
+        pause: false,
+        muted: false,
+        toastTime: 4,
+        toastText: "拖动纸伞接风，点按投递练习信",
+        countdown: 0,
+        shake: 0,
+        tutorialPhase: "idle",
+        tutorialFade: 1,
+        tutorialText: "",
+        tutorialPulse: 0,
+        fullHudAlpha: 0,
+        gameStartedAt: 0,
+        normalScroll: false,
+        hintWind: false,
+        hintRoof: false,
+        hintLetters: false,
+        lastThrowAt: 0,
+        tapReadyAt: 0,
+      };
+
+      const fox = {
+        x: 0.28,
+        y: 0.48,
+        vx: 0,
+        vy: 0,
+        tilt: 0,
+        targetTilt: 0,
+        invulnerable: 0,
+        tail: 0,
+      };
+
+      const input = {
+        active: false,
+        id: null,
+        startX: 0,
+        startY: 0,
+        x: 0,
+        y: 0,
+        dx: 0,
+        dy: 0,
+        startedAt: 0,
+        lockedDrag: false,
+        horizontal: 0,
+        vertical: 0,
+      };
+
+      const letters = [];
+      const particles = [];
+      const rings = [];
+      const roofHits = [];
+      const stars = Array.from({ length: 74 }, (_, i) => ({
+        x: (i * 89 % 997) / 997,
+        y: (i * 233 % 809) / 809,
+        r: 0.6 + ((i * 37) % 100) / 90,
+        a: 0.35 + ((i * 19) % 100) / 180,
+      }));
+
+      const windows = [
+        { wx: 0.68, y: 0.50, w: 0.18, h: 0.115, stage: 0 },
+        { wx: 6.15, y: 0.42, w: 0.18, h: 0.112, stage: 1 },
+        { wx: 9.68, y: 0.58, w: 0.155, h: 0.100, stage: 1 },
+        { wx: 15.48, y: 0.37, w: 0.150, h: 0.095, stage: 2 },
+        { wx: 19.64, y: 0.50, w: 0.140, h: 0.090, stage: 2 },
+        { wx: 27.40, y: 0.34, w: 0.130, h: 0.086, stage: 3 },
+        { wx: 32.80, y: 0.48, w: 0.125, h: 0.082, stage: 3 },
+        { wx: 36.40, y: 0.31, w: 0.120, h: 0.080, stage: 3 },
+      ].map((win, idx) => ({ ...win, id: idx, lit: false, hitPulse: 0 }));
+
+      const obstacles = [
+        { wx: 14.30, y: 0.70, w: 0.10, h: 0.18, kind: "chimney" },
+        { wx: 21.20, y: 0.62, w: 0.12, h: 0.20, kind: "roof" },
+        { wx: 30.45, y: 0.66, w: 0.09, h: 0.22, kind: "chimney" },
+        { wx: 34.20, y: 0.60, w: 0.10, h: 0.24, kind: "chimney" },
+      ];
+
+      let audioCtx = null;
+      let last = performance.now();
+
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        W = Math.max(320, Math.floor(window.innerWidth));
+        H = Math.max(520, Math.floor(window.innerHeight));
+        canvas.width = Math.floor(W * dpr);
+        canvas.height = Math.floor(H * dpr);
+        canvas.style.width = W + "px";
+        canvas.style.height = H + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function reset() {
+        state.mode = "playing";
+        state.time = 0;
+        state.scroll = 0;
+        state.score = 0;
+        state.combo = 0;
+        state.letters = 10;
+        state.warmth = 3;
+        state.delivered = 0;
+        state.missed = 0;
+        state.collisions = 0;
+        state.pause = false;
+        state.countdown = 0;
+        state.toastTime = 4;
+        state.toastText = "向上拖，借风升起";
+        state.shake = 0;
+        state.tutorialPhase = SKIP_TUTORIAL ? "done" : "drag";
+        state.tutorialFade = 1;
+        state.tutorialText = "向上拖，借风升起";
+        state.tutorialPulse = 0;
+        state.fullHudAlpha = SKIP_TUTORIAL ? 1 : 0;
+        state.gameStartedAt = performance.now();
+        state.normalScroll = SKIP_TUTORIAL;
+        state.hintWind = false;
+        state.hintRoof = false;
+        state.hintLetters = false;
+        state.lastThrowAt = 0;
+        state.tapReadyAt = 0;
+        fox.x = 0.28;
+        fox.y = 0.48;
+        fox.vx = 0;
+        fox.vy = 0;
+        fox.tilt = 0;
+        fox.targetTilt = 0;
+        fox.invulnerable = 0;
+        letters.length = 0;
+        particles.length = 0;
+        rings.length = 0;
+        roofHits.length = 0;
+        windows.forEach((w) => {
+          w.lit = false;
+          w.hitPulse = 0;
+        });
+        ui.startOverlay.classList.add("hidden");
+        ui.endOverlay.classList.add("hidden");
+        ui.hud.classList.toggle("tutorial", state.tutorialPhase !== "done");
+        ui.pauseBtn.title = "暂停";
+        ui.pauseBtn.setAttribute("aria-label", "暂停");
+        updateHud();
+      }
+
+      function stageAt(t) {
+        if (t < 15) return 0;
+        if (t < 55) return 1;
+        if (t < 100) return 2;
+        if (t < 145) return 3;
+        return 4;
+      }
+
+      function baseSpeed(t) {
+        const sw = W;
+        if (t < 15) return 0.18 * sw;
+        if (t < 55) return 0.22 * sw;
+        if (t < 100) return 0.26 * sw;
+        return 0.30 * sw;
+      }
+
+      function windAt(screenX, yRatio, t) {
+        const stage = stageAt(t);
+        const gust = stage === 2 ? Math.sin(t * TAU / 2.4) * 0.2 : 0;
+        const lane = Math.sin((screenX / W) * 4.5 + t * 1.4);
+        const upDraft = stage >= 3 ? Math.sin(t * 2.1 + yRatio * 6.0) : 0.2;
+        let forward = 1 + gust;
+        let lift = 0;
+        let inBand = false;
+        if (stage === 0) {
+          inBand = yRatio > 0.34 && yRatio < 0.66;
+          lift = inBand ? -0.05 : 0;
+        } else if (stage === 1) {
+          inBand = yRatio > 0.30 && yRatio < 0.62;
+          lift = inBand ? -0.08 : 0;
+        } else if (stage === 2) {
+          inBand = lane > -0.35 && yRatio > 0.26 && yRatio < 0.68;
+          lift = inBand ? -0.10 - Math.max(0, gust) * 0.12 : 0.02;
+        } else {
+          inBand = Math.abs(lane) < 0.55 || upDraft > 0.45;
+          lift = inBand ? (-0.12 * Math.sign(upDraft || 1)) : 0.05;
+        }
+        return { forward, lift, inBand, stage };
+      }
+
+      function update(dt) {
+        if (state.mode !== "playing" || state.pause) return;
+        state.tutorialPulse += dt;
+        if (state.normalScroll) state.time += dt;
+        state.toastTime = Math.max(0, state.toastTime - dt);
+        state.shake = Math.max(0, state.shake - dt * 3);
+        fox.invulnerable = Math.max(0, fox.invulnerable - dt);
+
+        const wind = windAt(fox.x * W, fox.y, state.time);
+        const speedFactor = wind.inBand ? 1.25 : 1;
+        if (state.normalScroll) state.scroll += baseSpeed(state.time) * speedFactor * dt;
+        state.fullHudAlpha = smooth(state.fullHudAlpha, state.tutorialPhase === "done" ? 1 : 0, 0.45, dt);
+        document.querySelectorAll(".pill.hud-full").forEach((el) => {
+          el.style.opacity = state.fullHudAlpha;
+          el.style.transform = `translateY(${(1 - state.fullHudAlpha) * -6}px)`;
+        });
+        ui.hud.classList.toggle("tutorial", state.tutorialPhase !== "done");
+
+        const dragX = input.active ? input.horizontal : 0;
+        const dragY = input.active ? input.vertical : 0;
+        fox.targetTilt = dragX * 28;
+        fox.tilt = smooth(fox.tilt, fox.targetTilt, input.active ? 0.10 : 0.18, dt);
+        fox.vx = smooth(fox.vx, dragX * 0.08, 0.16, dt);
+
+        const gravity = 0.48 * H;
+        const lift = 0.70 * H * clamp(-dragY, -0.2, 1);
+        const dive = dragY > 0 ? dragY * 0.40 * H : 0;
+        const windLift = (wind.lift - (wind.inBand ? 0.12 : 0)) * H;
+        fox.vy += (gravity - lift + dive + windLift) * dt;
+        fox.vy = clamp(fox.vy, -0.32 * H, 0.32 * H);
+        fox.y += fox.vy * dt / H;
+        fox.x = clamp(fox.x + fox.vx * dt, 0.18, 0.43);
+
+        if (fox.y < 0.18) {
+          fox.y = 0.18;
+          fox.vy = Math.max(0, fox.vy * -0.15);
+        }
+        if (fox.y > 0.78) {
+          fox.y = 0.78;
+          hitObstacle("屋顶碰撞");
+        }
+
+        fox.tail += dt * (3 + Math.abs(fox.vy) / H * 8);
+        updateLetters(dt);
+        updateEffects(dt);
+        checkObstacleCollision();
+        updateHints(wind);
+
+        windows.forEach((w) => {
+          w.hitPulse = Math.max(0, w.hitPulse - dt * 3.5);
+        });
+
+        if (state.normalScroll && (state.time >= 160 || state.scroll > W * 38.5 || state.warmth <= 0 || (state.letters <= 0 && state.delivered < 6))) {
+          finish();
+        }
+        updateHud();
+      }
+
+      function throwLetter() {
+        if (state.mode !== "playing" || state.pause || state.letters <= 0) return;
+        if (state.tutorialPhase === "drag") {
+          showToast("先向上拖，借风升起");
+          return;
+        }
+        state.letters -= 1;
+        state.lastThrowAt = performance.now();
+        const tutorialShot = state.tutorialPhase === "tap";
+        const assistedTutorialShot = tutorialShot && fox.y < 0.72;
+        const target = windows[0];
+        letters.push({
+          x: fox.x * W + 22,
+          y: fox.y * H + 5,
+          vx: baseSpeed(state.time) * 0.80 + fox.vx * W,
+          vy: fox.vy * 0.25 - 35,
+          rot: fox.tilt * 0.015,
+          used: false,
+          age: 0,
+          tutorial: assistedTutorialShot,
+          tutorialRetry: tutorialShot,
+          startX: fox.x * W + 22,
+          startY: fox.y * H + 5,
+          targetId: tutorialShot ? target.id : null,
+          duration: 0.88,
+        });
+        beep(680, 0.04, "triangle", 0.03);
+        showToast(tutorialShot ? "看准发光窗口" : "信件投出");
+      }
+
+      function updateLetters(dt) {
+        for (let i = letters.length - 1; i >= 0; i -= 1) {
+          const l = letters[i];
+          l.age += dt;
+          if (l.tutorial) {
+            const win = windows[l.targetId];
+            const box = windowBox(win);
+            const targetX = box.x + box.w * 0.50;
+            const targetY = box.y + box.h * 0.50;
+            const p = clamp(l.age / l.duration, 0, 1);
+            const arc = Math.sin(p * Math.PI) * H * 0.16;
+            l.x = lerp(l.startX, targetX, p);
+            l.y = lerp(l.startY, targetY, p) - arc;
+            l.rot += dt * 5;
+            if (p >= 1 && !win.lit) {
+              scoreHit(win, "precise");
+              l.used = true;
+              letters.splice(i, 1);
+              continue;
+            }
+            continue;
+          } else {
+            l.x += (l.vx - baseSpeed(state.time)) * dt;
+            l.y += l.vy * dt;
+            l.vy += 0.48 * H * dt;
+            l.rot += dt * 3;
+          }
+
+          for (const win of windows) {
+            if (win.lit || l.used) continue;
+            const box = windowBox(win);
+            const inner = {
+              x: box.x + box.w * 0.2,
+              y: box.y + box.h * 0.2,
+              w: box.w * 0.6,
+              h: box.h * 0.6,
+            };
+            const inBox = l.x >= box.x && l.x <= box.x + box.w && l.y >= box.y && l.y <= box.y + box.h;
+            const inInner = l.x >= inner.x && l.x <= inner.x + inner.w && l.y >= inner.y && l.y <= inner.y + inner.h;
+            if (inBox) {
+              const center = {
+                x: box.x + box.w / 2,
+                y: box.y + box.h / 2,
+              };
+              const dist = Math.hypot(l.x - center.x, l.y - center.y);
+              const precise = inInner && dist < Math.min(box.w, box.h) * 0.22;
+              const edge = !inInner && l.x > box.x + box.w * 0.08 && l.x < box.x + box.w * 0.92;
+              scoreHit(win, precise ? "precise" : edge ? "edge" : "normal");
+              l.used = true;
+              letters.splice(i, 1);
+              break;
+            }
+          }
+
+          if (!l.used && (l.y > H * 0.88 || l.x < -40 || l.x > W + 80 || l.age > 3.2)) {
+            letters.splice(i, 1);
+            missLetter(l.x, l.y);
+          }
+        }
+      }
+
+      function scoreHit(win, type) {
+        win.lit = true;
+        win.hitPulse = state.tutorialPhase === "tap" && win.id === 0 ? 1.8 : 1;
+        state.combo += 1;
+        state.delivered += 1;
+        const mult = comboMultiplier();
+        const base = type === "precise" ? 100 : type === "edge" ? 30 : 60;
+        state.score += Math.round(base * mult);
+        rings.push({ x: windowBox(win).x + windowBox(win).w / 2, y: windowBox(win).y + windowBox(win).h / 2, r: 8, life: 0.5, type });
+        spawnParticles(windowBox(win).x + windowBox(win).w / 2, windowBox(win).y + windowBox(win).h / 2, type === "precise" ? 18 : 12, "#ffd37b");
+        beep(880 + Math.min(3, state.combo) * 120, 0.09, "sine", 0.04);
+        if (state.tutorialPhase === "tap" && win.id === 0) {
+          completeTutorial();
+        } else {
+          showToast(type === "precise" ? "精准命中" : type === "edge" ? "擦边命中" : "窗户点亮");
+        }
+      }
+
+      function missLetter(x, y) {
+        if (state.tutorialPhase === "tap") {
+          state.letters += 1;
+          state.combo = 0;
+          windows[0].lit = false;
+          windows[0].hitPulse = 0;
+          state.toastText = "轻点屏幕，投出信件";
+          state.toastTime = 2.5;
+          spawnParticles(x || W * 0.5, y || H * 0.7, 8, "#f7f0de");
+          return;
+        }
+        if (state.time < 15) {
+          state.letters += 1;
+          showToast("练习补信，无惩罚");
+          return;
+        }
+        state.combo = 0;
+        state.missed += 1;
+        state.warmth = Math.max(0, state.warmth - 1);
+        spawnParticles(x || W * 0.5, y || H * 0.7, 10, "#f7f0de");
+        beep(220, 0.12, "sawtooth", 0.025);
+        showToast("错失，暖光 -1");
+      }
+
+      function completeTutorial() {
+        state.tutorialPhase = "done";
+        state.normalScroll = true;
+        state.time = 15;
+        state.tutorialFade = 1;
+        fox.y = Math.min(fox.y, 0.48);
+        fox.vy = -0.18 * H;
+        fox.invulnerable = 3.0;
+        showToast("很好，跟着风点亮更多窗户");
+        spawnParticles(windowBox(windows[0]).x + windowBox(windows[0]).w / 2, windowBox(windows[0]).y + windowBox(windows[0]).h / 2, 34, "#ffd37b");
+        beep(1180, 0.12, "sine", 0.05);
+      }
+
+      function hitObstacle(message) {
+        if (fox.invulnerable > 0 || state.time < 15) return;
+        fox.invulnerable = 0.6;
+        fox.vy *= -0.25;
+        state.combo = 0;
+        state.collisions += 1;
+        state.warmth = Math.max(0, state.warmth - 1);
+        state.shake = reduceMotion ? 0 : 1;
+        roofHits.push({ x: fox.x * W, y: fox.y * H + 34, life: 0.25 });
+        beep(150, 0.10, "square", 0.025);
+        showToast(message + "，暖光 -1");
+      }
+
+      function checkObstacleCollision() {
+        if (fox.invulnerable > 0) return;
+        const fx = fox.x * W;
+        const fy = fox.y * H;
+        for (const o of obstacles) {
+          const x = worldToScreen(o.wx);
+          const ow = o.w * W;
+          const oy = o.y * H;
+          const oh = o.h * H;
+          if (fx + 24 > x && fx - 24 < x + ow && fy + 26 > oy && fy - 18 < oy + oh) {
+            hitObstacle(o.kind === "chimney" ? "烟囱碰撞" : "屋脊碰撞");
+          }
+        }
+      }
+
+      function updateHints(wind) {
+        if (!state.normalScroll || state.tutorialPhase !== "done") return;
+        if (!state.hintWind && wind.inBand && state.time > 18 && fox.y > 0.30 && fox.y < 0.60) {
+          state.hintWind = true;
+          showToast("顺着金色风带上升");
+        }
+        if (!state.hintRoof) {
+          for (const o of obstacles) {
+            const x = worldToScreen(o.wx);
+            if (x > W * 0.45 && x < W * 0.86) {
+              state.hintRoof = true;
+              showToast("提前抬高，避开屋顶");
+              break;
+            }
+          }
+        }
+        if (!state.hintLetters && state.letters === 3) {
+          state.hintLetters = true;
+          showToast("每封信都很珍贵");
+        }
+      }
+
+      function updateEffects(dt) {
+        for (let i = particles.length - 1; i >= 0; i -= 1) {
+          const p = particles[i];
+          p.life -= dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 30 * dt;
+          if (p.life <= 0) particles.splice(i, 1);
+        }
+        for (let i = rings.length - 1; i >= 0; i -= 1) {
+          rings[i].life -= dt;
+          rings[i].r += dt * 120;
+          if (rings[i].life <= 0) rings.splice(i, 1);
+        }
+        for (let i = roofHits.length - 1; i >= 0; i -= 1) {
+          roofHits[i].life -= dt;
+          if (roofHits[i].life <= 0) roofHits.splice(i, 1);
+        }
+      }
+
+      function spawnParticles(x, y, count, color) {
+        const cap = reduceMotion ? Math.ceil(count * 0.3) : count;
+        for (let i = 0; i < cap && particles.length < 80; i += 1) {
+          const a = (i / cap) * TAU + Math.random() * 0.4;
+          const s = 30 + Math.random() * 105;
+          particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 24, life: 0.35 + Math.random() * 0.35, color });
+        }
+      }
+
+      function comboMultiplier() {
+        if (state.combo >= 4) return 2;
+        if (state.combo === 3) return 1.5;
+        if (state.combo === 2) return 1.25;
+        return 1;
+      }
+
+      function worldToScreen(wx) {
+        return wx * W - state.scroll;
+      }
+
+      function windowBox(win) {
+        return {
+          x: worldToScreen(win.wx),
+          y: win.y * H,
+          w: win.w * W,
+          h: win.h * H,
+        };
+      }
+
+      function finish() {
+        if (state.mode === "end") return;
+        state.mode = "end";
+        const full = state.delivered >= 8;
+        const done = state.delivered >= 6;
+        ui.endTitle.textContent = full ? "全城点亮" : done ? "投递完成" : "邮路中断";
+        ui.endText.textContent = full
+          ? "夜镇的每一扇窗都收到了光。"
+          : done
+            ? "钟楼升起暖风，今晚的邮差任务完成了。"
+            : "暖光耗尽或信件不足，小狐狸缓缓降落。";
+        ui.endStats.innerHTML = [
+          `总分：${state.score}`,
+          `点亮窗户：${state.delivered}/8`,
+          `剩余信件：${state.letters}`,
+          `错失/碰撞：${state.missed}/${state.collisions}`,
+        ].map((s) => `<li>${s}</li>`).join("");
+        setTimeout(() => ui.endOverlay.classList.remove("hidden"), 800);
+      }
+
+      function updateHud() {
+        ui.score.textContent = state.score;
+        ui.combo.textContent = "x" + comboMultiplier().toFixed(comboMultiplier() % 1 ? 2 : 1);
+        ui.letters.textContent = state.letters;
+        ui.warmth.textContent = state.warmth;
+        ui.windows.textContent = state.delivered + "/8";
+        ui.toast.textContent = state.pause ? "已暂停" : state.toastText;
+        ui.toast.classList.toggle("hidden", !state.pause && state.toastTime <= 0);
+      }
+
+      function showToast(text) {
+        state.toastText = text;
+        state.toastTime = 1.6;
+      }
+
+      function draw() {
+        const shakeX = state.shake > 0 ? (Math.random() - 0.5) * 4 * state.shake : 0;
+        const shakeY = state.shake > 0 ? (Math.random() - 0.5) * 3 * state.shake : 0;
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+        drawSky();
+        drawWind();
+        drawTown();
+        drawLetters();
+        drawFox();
+        drawEffects();
+        drawProgressGlow();
+        drawTutorial();
+        ctx.restore();
+      }
+
+      function drawSky() {
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, "#091021");
+        g.addColorStop(0.48, "#162240");
+        g.addColorStop(1, "#23182f");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.save();
+        for (const s of stars) {
+          const x = (s.x * W - state.scroll * 0.05) % W;
+          const px = x < 0 ? x + W : x;
+          ctx.globalAlpha = s.a + Math.sin(state.time * 1.2 + s.x * 20) * 0.08;
+          ctx.fillStyle = "#d7f2ff";
+          ctx.beginPath();
+          ctx.arc(px, s.y * H * 0.58, s.r, 0, TAU);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        drawHills(0.12, "#132746", 0.70, 90);
+        drawHills(0.25, "#1b3354", 0.76, 64);
+      }
+
+      function drawHills(speed, color, base, amp) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        for (let x = -40; x <= W + 40; x += 24) {
+          const y = H * base + Math.sin((x + state.scroll * speed) / 110) * amp * 0.16 + Math.sin((x + state.scroll * speed) / 57) * amp * 0.08;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      function drawWind() {
+        const t = state.time;
+        ctx.save();
+        ctx.lineWidth = 8;
+        ctx.lineCap = "round";
+        for (let band = 0; band < 3; band += 1) {
+          const yBase = H * (0.28 + band * 0.14);
+          ctx.strokeStyle = band === 1 ? "rgba(245, 194, 94, 0.36)" : "rgba(66, 211, 206, 0.34)";
+          ctx.globalAlpha = 0.55;
+          ctx.beginPath();
+          for (let x = -30; x <= W + 30; x += 18) {
+            const y = yBase + Math.sin(x / 70 + t * (1.2 + band * 0.35) + band) * (16 + band * 4);
+            if (x === -30) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawTown() {
+        for (let i = -1; i < 12; i += 1) {
+          const x = i * W * 0.42 - (state.scroll * 1.0 % (W * 0.42));
+          const roofY = H * (0.74 + Math.sin(i * 1.7) * 0.045);
+          const bW = W * (0.34 + (i % 3) * 0.035);
+          ctx.fillStyle = i % 2 ? "#1a1f35" : "#1f263f";
+          ctx.fillRect(x, roofY, bW, H - roofY);
+          ctx.fillStyle = "#12172a";
+          ctx.beginPath();
+          ctx.moveTo(x - 14, roofY + 2);
+          ctx.lineTo(x + bW * 0.52, roofY - H * 0.10);
+          ctx.lineTo(x + bW + 16, roofY + 2);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        obstacles.forEach((o) => {
+          const x = worldToScreen(o.wx);
+          const y = o.y * H;
+          const w = o.w * W;
+          const h = o.h * H;
+          if (x > W + 80 || x + w < -80) return;
+          ctx.fillStyle = o.kind === "chimney" ? "#2e2434" : "#14192b";
+          ctx.fillRect(x, y, w, h);
+          ctx.fillStyle = "#3f3345";
+          ctx.fillRect(x - 3, y - 6, w + 6, 8);
+        });
+
+        windows.forEach((win) => {
+          const b = windowBox(win);
+          if (b.x > W + 80 || b.x + b.w < -80) return;
+          const pulse = win.hitPulse + (!win.lit ? Math.max(0, Math.sin(state.time * 4 + win.id) * 0.2) : 0);
+          ctx.fillStyle = "rgba(6, 9, 17, 0.88)";
+          roundRect(b.x - 6, b.y - 7, b.w + 12, b.h + 14, 5);
+          ctx.fill();
+          ctx.fillStyle = win.lit ? "#ffd071" : "#182642";
+          ctx.shadowColor = win.lit || pulse > 0 ? "#ffc75f" : "transparent";
+          ctx.shadowBlur = win.lit ? 22 : 10 * pulse;
+          roundRect(b.x, b.y, b.w, b.h, 4);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = win.lit ? "rgba(255, 236, 180, 0.8)" : "rgba(153, 198, 242, 0.38)";
+          ctx.lineWidth = 2;
+          roundRect(b.x, b.y, b.w, b.h, 4);
+          ctx.stroke();
+
+          const next = windows.find((w) => !w.lit);
+          if (next === win && state.mode === "playing") {
+            const tutorialTarget = state.tutorialPhase !== "done" && win.id === 0;
+            const throb = tutorialTarget ? 1 + Math.sin(state.tutorialPulse * 7) * 0.35 : 1;
+            ctx.strokeStyle = tutorialTarget ? "rgba(255, 235, 152, 0.98)" : "rgba(255, 222, 137, 0.80)";
+            ctx.lineWidth = tutorialTarget ? 4 * throb : 2 + Math.sin(state.time * 6) * 0.7;
+            ctx.shadowColor = tutorialTarget ? "#ffd071" : "transparent";
+            ctx.shadowBlur = tutorialTarget ? 18 : 0;
+            roundRect(b.x - 12, b.y - 13, b.w + 24, b.h + 26, 8);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            if (tutorialTarget) {
+              ctx.strokeStyle = "rgba(255, 255, 255, 0.50)";
+              ctx.lineWidth = 1.5;
+              roundRect(b.x - 23, b.y - 24, b.w + 46, b.h + 48, 10);
+              ctx.stroke();
+            }
+          }
+        });
+
+        const towerX = worldToScreen(39.0);
+        if (towerX < W + 180) {
+          ctx.fillStyle = "#202842";
+          ctx.fillRect(towerX, H * 0.28, W * 0.18, H * 0.55);
+          ctx.fillStyle = "#111729";
+          ctx.beginPath();
+          ctx.moveTo(towerX - 20, H * 0.29);
+          ctx.lineTo(towerX + W * 0.09, H * 0.16);
+          ctx.lineTo(towerX + W * 0.18 + 20, H * 0.29);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#f5c15f";
+          ctx.beginPath();
+          ctx.arc(towerX + W * 0.09, H * 0.39, W * 0.045, 0, TAU);
+          ctx.fill();
+        }
+      }
+
+      function drawLetters() {
+        for (const l of letters) {
+          ctx.save();
+          ctx.translate(l.x, l.y);
+          ctx.rotate(l.rot);
+          ctx.fillStyle = "#fff4d7";
+          ctx.strokeStyle = "#d9a968";
+          ctx.lineWidth = 1.5;
+          roundRect(-9, -6, 18, 12, 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-8, -5);
+          ctx.lineTo(0, 1);
+          ctx.lineTo(8, -5);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      function drawFox() {
+        const x = fox.x * W;
+        const y = fox.y * H;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate((fox.tilt * Math.PI) / 180 * 0.35);
+        ctx.globalAlpha = fox.invulnerable > 0 ? 0.72 + Math.sin(state.time * 45) * 0.18 : 1;
+
+        ctx.save();
+        ctx.rotate((fox.tilt * Math.PI) / 180);
+        ctx.fillStyle = "#f5e6bd";
+        ctx.strokeStyle = "#8f4d4c";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-42, -18);
+        ctx.quadraticCurveTo(0, -56 - Math.abs(fox.tilt) * 0.08, 42, -18);
+        ctx.quadraticCurveTo(0, -6, -42, -18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(109, 75, 82, 0.55)";
+        ctx.beginPath();
+        ctx.moveTo(0, -48);
+        ctx.lineTo(0, -11);
+        ctx.moveTo(-23, -35);
+        ctx.lineTo(0, -11);
+        ctx.moveTo(23, -35);
+        ctx.lineTo(0, -11);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.strokeStyle = "#6d4b52";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -11);
+        ctx.lineTo(0, 7);
+        ctx.stroke();
+
+        ctx.fillStyle = "#de7845";
+        ctx.beginPath();
+        ctx.ellipse(0, 20, 16, 20, 0, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#f2a45a";
+        ctx.beginPath();
+        ctx.arc(0, -1, 15, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#f2a45a";
+        ctx.beginPath();
+        ctx.moveTo(-10, -13);
+        ctx.lineTo(-18, -29);
+        ctx.lineTo(-3, -18);
+        ctx.moveTo(10, -13);
+        ctx.lineTo(18, -29);
+        ctx.lineTo(3, -18);
+        ctx.fill();
+        ctx.fillStyle = "#fff1cf";
+        ctx.beginPath();
+        ctx.ellipse(0, 24, 8, 12, 0, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#2a1820";
+        ctx.beginPath();
+        ctx.arc(-5, -4, 1.8, 0, TAU);
+        ctx.arc(5, -4, 1.8, 0, TAU);
+        ctx.fill();
+
+        ctx.save();
+        ctx.translate(-11, 28);
+        ctx.rotate(Math.sin(fox.tail) * 0.35 - 0.7);
+        ctx.fillStyle = "#df7844";
+        ctx.beginPath();
+        ctx.ellipse(-16, 6, 9, 24, -0.5, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = "#fff1cf";
+        ctx.beginPath();
+        ctx.ellipse(-23, 17, 7, 10, -0.5, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+      }
+
+      function drawEffects() {
+        for (const r of rings) {
+          ctx.save();
+          ctx.globalAlpha = clamp(r.life * 2, 0, 1);
+          ctx.strokeStyle = r.type === "precise" ? "#ffe19a" : "#f6b65a";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(r.x, r.y, r.r, 0, TAU);
+          ctx.stroke();
+          ctx.restore();
+        }
+        for (const p of particles) {
+          ctx.save();
+          ctx.globalAlpha = clamp(p.life * 2, 0, 1);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2.2, 0, TAU);
+          ctx.fill();
+          ctx.restore();
+        }
+        for (const h of roofHits) {
+          ctx.save();
+          ctx.globalAlpha = h.life * 4;
+          ctx.strokeStyle = "#ffd0a0";
+          ctx.lineWidth = 2;
+          for (let i = 0; i < 5; i += 1) {
+            ctx.beginPath();
+            ctx.moveTo(h.x, h.y);
+            ctx.lineTo(h.x + Math.cos(i * 1.3) * 22, h.y + Math.sin(i * 1.3) * 14);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      function drawProgressGlow() {
+        const level = state.delivered <= 2 ? 0.18 : state.delivered <= 5 ? 0.35 : state.delivered <= 7 ? 0.55 : 0.78;
+        const g = ctx.createRadialGradient(W * 0.5, H * 0.95, 0, W * 0.5, H * 0.95, H * 0.75);
+        g.addColorStop(0, `rgba(255, 184, 88, ${level})`);
+        g.addColorStop(0.44, `rgba(252, 139, 85, ${level * 0.18})`);
+        g.addColorStop(1, "rgba(255, 184, 88, 0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      function drawTutorial() {
+        if (state.mode !== "playing" || state.tutorialPhase === "done") return;
+        const t = state.tutorialPulse;
+        const phase = state.tutorialPhase;
+        const foxX = fox.x * W;
+        const foxY = fox.y * H;
+        const first = windowBox(windows[0]);
+        if (phase === "tap") {
+          drawThrowArc(foxX + 24, foxY + 4, first.x + first.w * 0.5, first.y + first.h * 0.5);
+          drawTapCue(first.x + first.w * 0.5, first.y + first.h + 56, t);
+          drawCallout("轻点屏幕，投出信件", W * 0.5, Math.min(H * 0.34, first.y - 44), 1);
+        } else {
+          drawDragCue(foxX - 58, foxY + 74, t);
+          drawCallout("向上拖，借风升起", foxX + 24, Math.max(96, foxY - 96), 1);
+        }
+      }
+
+      function drawThrowArc(x1, y1, x2, y2) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 232, 168, 0.72)";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([9, 8]);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.quadraticCurveTo((x1 + x2) / 2, Math.min(y1, y2) - H * 0.18, x2, y2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "rgba(255, 232, 168, 0.95)";
+        ctx.beginPath();
+        ctx.arc(x2, y2, 5, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawDragCue(x, y, t) {
+        const cycle = (t % 1.35) / 1.35;
+        const up = cycle < 0.78 ? cycle / 0.78 : 0;
+        const fade = cycle < 0.78 ? 1 : 1 - (cycle - 0.78) / 0.22;
+        const startY = y;
+        const endY = y - 92;
+        const handY = lerp(startY, endY, up);
+        ctx.save();
+        ctx.globalAlpha = 0.82 * fade;
+        ctx.strokeStyle = "rgba(128, 226, 255, 0.80)";
+        ctx.lineWidth = 4;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x, startY - 4);
+        ctx.lineTo(x, endY + 10);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(128, 226, 255, 0.92)";
+        ctx.beginPath();
+        ctx.moveTo(x, endY - 16);
+        ctx.lineTo(x - 13, endY + 8);
+        ctx.lineTo(x + 13, endY + 8);
+        ctx.closePath();
+        ctx.fill();
+        drawFinger(x, handY, 0.92);
+        ctx.restore();
+      }
+
+      function drawTapCue(x, y, t) {
+        const cycle = (t % 1.0);
+        const press = cycle < 0.42 ? cycle / 0.42 : 1;
+        const ripple = clamp((cycle - 0.18) / 0.72, 0, 1);
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 226, 154, ${0.7 * (1 - ripple)})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y + 8, 18 + ripple * 28, 0, TAU);
+        ctx.stroke();
+        drawFinger(x, y - 18 + press * 16, 0.95);
+        ctx.restore();
+      }
+
+      function drawFinger(x, y, alpha) {
+        ctx.save();
+        ctx.globalAlpha *= alpha;
+        ctx.fillStyle = "rgba(244, 250, 255, 0.82)";
+        ctx.strokeStyle = "rgba(73, 105, 139, 0.72)";
+        ctx.lineWidth = 2;
+        roundRect(x - 11, y - 30, 22, 42, 11);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, y + 15, 14, Math.PI, TAU);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawCallout(text, x, y, alpha) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.font = "700 15px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const width = Math.min(W - 32, Math.max(172, ctx.measureText(text).width + 30));
+        const bx = clamp(x - width / 2, 16, W - width - 16);
+        const by = clamp(y - 21, 72, H - 86);
+        ctx.fillStyle = "rgba(8, 15, 30, 0.70)";
+        ctx.strokeStyle = "rgba(185, 229, 255, 0.32)";
+        ctx.lineWidth = 1.5;
+        roundRect(bx, by, width, 42, 8);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#f4fbff";
+        ctx.fillText(text, bx + width / 2, by + 21);
+        ctx.restore();
+      }
+
+      function roundRect(x, y, w, h, r) {
+        const rr = Math.min(r, Math.abs(w) / 2, Math.abs(h) / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + rr, y);
+        ctx.lineTo(x + w - rr, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+        ctx.lineTo(x + w, y + h - rr);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+        ctx.lineTo(x + rr, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+        ctx.lineTo(x, y + rr);
+        ctx.quadraticCurveTo(x, y, x + rr, y);
+      }
+
+      function beep(freq, dur, type, gain) {
+        if (state.muted) return;
+        try {
+          audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.value = freq;
+          g.gain.value = gain;
+          g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+          osc.connect(g);
+          g.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + dur);
+        } catch (e) {
+          state.muted = true;
+        }
+      }
+
+      function setPointer(e) {
+        input.x = e.clientX;
+        input.y = e.clientY;
+        input.dx = input.x - input.startX;
+        input.dy = input.y - input.startY;
+        const moved = Math.hypot(input.dx, input.dy);
+        if (moved > 12) input.lockedDrag = true;
+        input.horizontal = clamp(input.dx / 72, -1, 1);
+        input.vertical = clamp(input.dy / 100, -1, 1);
+        if (state.tutorialPhase === "drag" && input.dy < -54 && moved > 56) {
+          state.tutorialPhase = "tap";
+          state.tutorialText = "轻点屏幕，投出信件";
+          state.toastText = "轻点屏幕，投出信件";
+          state.toastTime = 3.0;
+          state.tutorialPulse = 0;
+          state.tapReadyAt = performance.now() + 260;
+          const dragPointerId = input.id;
+          window.setTimeout(() => {
+            if (state.tutorialPhase === "tap" && input.id === dragPointerId) {
+              try {
+                if (dragPointerId !== null) canvas.releasePointerCapture(dragPointerId);
+              } catch (e) {}
+              input.active = false;
+              input.id = null;
+              input.horizontal = 0;
+              input.vertical = 0;
+            }
+          }, 220);
+          beep(760, 0.06, "sine", 0.025);
+        }
+      }
+
+      canvas.addEventListener("pointerdown", (e) => {
+        if (state.mode !== "playing" || state.pause) return;
+        canvas.setPointerCapture(e.pointerId);
+        input.active = true;
+        input.id = e.pointerId;
+        input.startX = e.clientX;
+        input.startY = e.clientY;
+        input.startedAt = performance.now();
+        input.lockedDrag = false;
+        setPointer(e);
+      });
+
+      canvas.addEventListener("pointermove", (e) => {
+        if (!input.active || input.id !== e.pointerId) return;
+        setPointer(e);
+      });
+
+      function endPointer(e) {
+        if (!input.active || input.id !== e.pointerId) return;
+        const age = performance.now() - input.startedAt;
+        const moved = Math.hypot(input.dx, input.dy);
+        if (age < 180 && moved < 12) throwLetter();
+        input.active = false;
+        input.id = null;
+        input.horizontal = 0;
+        input.vertical = 0;
+      }
+
+      canvas.addEventListener("pointerup", endPointer);
+      canvas.addEventListener("pointercancel", endPointer);
+      function tutorialTapFallback() {
+        const now = performance.now();
+        if (state.tutorialPhase === "tap" && now >= state.tapReadyAt && now - state.lastThrowAt > 250) {
+          throwLetter();
+        }
+      }
+
+      canvas.addEventListener("click", tutorialTapFallback);
+      canvas.addEventListener("mouseup", tutorialTapFallback);
+      canvas.addEventListener("touchend", tutorialTapFallback, { passive: false });
+      document.addEventListener("click", tutorialTapFallback, true);
+      document.addEventListener("mouseup", tutorialTapFallback, true);
+      document.addEventListener("pointerdown", tutorialTapFallback, true);
+      document.addEventListener("touchend", tutorialTapFallback, { passive: true, capture: true });
+
+      ui.startBtn.addEventListener("click", () => {
+        audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.resume?.();
+        reset();
+      });
+      ui.restartBtn.addEventListener("click", reset);
+      ui.pauseBtn.addEventListener("click", () => {
+        if (state.mode !== "playing") return;
+        state.pause = !state.pause;
+        ui.pauseBtn.innerHTML = state.pause
+          ? '<svg viewBox="0 0 24 24"><path d="m8 5 11 7-11 7V5z"/></svg>'
+          : '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>';
+        updateHud();
+      });
+      ui.muteBtn.addEventListener("click", () => {
+        state.muted = !state.muted;
+        ui.soundWave.setAttribute("d", state.muted ? "M16 9l5 6M21 9l-5 6" : "M16 9a5 5 0 0 1 0 6");
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && state.mode === "playing") {
+          state.pause = true;
+          showToast("已暂停");
+          updateHud();
+        }
+      });
+
+      window.addEventListener("resize", resize);
+
+      function loop(now) {
+        const dt = Math.min(0.033, (now - last) / 1000 || 0);
+        last = now;
+        update(dt);
+        draw();
+        requestAnimationFrame(loop);
+      }
+
+      resize();
+      updateHud();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
