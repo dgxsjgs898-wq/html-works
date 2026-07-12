@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f1e8">
+  <title>同样一块地，为什么围栏越来越长？</title>
+  <style>
+    :root {
+      --ink:#19342d; --muted:#65736c; --paper:#f5f1e8; --land:#93bd72;
+      --land-light:#cbe3a6; --fence:#e76c42; --sun:#f2b94b; --white:#fffdf8;
+    }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; overscroll-behavior:none; touch-action:none; }
+    body { font-family:ui-rounded,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--ink); background:var(--paper); }
+    button { font:inherit; color:inherit; }
+    .app { position:relative; width:100%; height:100%; min-height:560px; overflow:hidden; background:
+      radial-gradient(circle at 12% 8%,rgba(242,185,75,.2),transparent 24%),
+      linear-gradient(#f8f5ee 0 68%,#e8e1d4 68% 100%); }
+    .top { position:absolute; z-index:5; top:max(18px,env(safe-area-inset-top)); left:20px; right:20px; display:flex; align-items:center; justify-content:space-between; }
+    .brand { font-size:14px; font-weight:800; color:#496058; }
+    .step { display:flex; gap:5px; }
+    .step i { width:22px; height:4px; border-radius:2px; background:#d8d2c5; transition:.35s; }
+    .step i.on { background:var(--fence); }
+    .screen { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; opacity:0; pointer-events:none; transform:translateY(8px); transition:opacity .35s,transform .35s; }
+    .screen.active { opacity:1; pointer-events:auto; transform:none; }
+    .prediction { padding:94px 22px 30px; justify-content:center; }
+    .question-kicker { font-size:13px; font-weight:800; color:#d65e39; margin-bottom:12px; }
+    h1 { max-width:350px; margin:0; font-size:clamp(25px,7vw,32px); line-height:1.32; text-align:center; letter-spacing:0; }
+    .mini-land { width:152px; height:112px; margin:34px 0 28px; position:relative; background:var(--land-light); border:7px double var(--fence); box-shadow:inset 0 0 0 2px rgba(255,255,255,.65); }
+    .mini-land::after { content:"36 m²"; position:absolute; inset:0; display:grid; place-items:center; font-weight:900; font-size:22px; color:#315b42; }
+    .answers { width:min(100%,350px); display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .answer { min-height:54px; border:2px solid #d3cec2; border-radius:7px; background:var(--white); font-weight:850; font-size:17px; box-shadow:0 3px 0 #d3cec2; cursor:pointer; }
+    .answer:active { transform:translateY(2px); box-shadow:0 1px 0 #d3cec2; }
+    .quiet { margin-top:18px; min-height:22px; color:var(--muted); font-size:14px; font-weight:700; }
+
+    .explore { padding:76px 16px max(18px,env(safe-area-inset-bottom)); }
+    .prompt { height:68px; display:flex; align-items:center; justify-content:center; text-align:center; font-size:clamp(20px,5.4vw,25px); font-weight:900; line-height:1.25; }
+    .metrics { width:min(100%,390px); display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:8px auto 4px; }
+    .metric { min-width:0; padding:10px 5px 8px; text-align:center; border-top:1px solid #d7d0c1; }
+    .metric span { display:block; color:var(--muted); font-size:12px; font-weight:750; }
+    .metric strong { display:block; margin-top:2px; font-size:clamp(18px,5vw,23px); white-space:nowrap; transition:color .2s,transform .2s; }
+    .metric.perimeter strong { color:var(--fence); }
+    .metric.bump strong { transform:scale(1.12); }
+    .plot { position:relative; flex:1; width:min(100%,430px); min-height:275px; display:flex; align-items:center; justify-content:center; }
+    .land-wrap { position:relative; width:280px; height:280px; display:grid; place-items:center; }
+    .land { position:relative; width:190px; height:190px; background:
+      repeating-linear-gradient(0deg,transparent 0 30px,rgba(255,255,255,.16) 30px 31px),
+      repeating-linear-gradient(90deg,transparent 0 30px,rgba(255,255,255,.16) 30px 31px),var(--land);
+      border:8px double var(--fence); box-shadow:0 7px 18px rgba(70,74,55,.14),inset 0 0 0 2px rgba(255,255,255,.55);
+      transition:box-shadow .25s,border-color .25s; will-change:width,height; }
+    .area-badge { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; color:#234d38; }
+    .area-badge small { font-size:12px; font-weight:800; }
+    .area-badge b { font-size:25px; }
+    .dimension { position:absolute; color:#50655b; font-size:13px; font-weight:850; pointer-events:none; }
+    .dim-w { left:0; right:0; bottom:-28px; text-align:center; }
+    .dim-h { top:50%; left:-45px; width:38px; transform:translateY(-50%); text-align:right; }
+    .handle { position:absolute; z-index:4; right:-24px; top:50%; width:42px; height:76px; transform:translateY(-50%); border:0; background:transparent; cursor:ew-resize; touch-action:none; }
+    .handle::before { content:""; position:absolute; left:13px; top:8px; bottom:8px; width:15px; border-radius:7px; background:var(--white); border:3px solid var(--fence); box-shadow:0 3px 8px rgba(100,68,48,.22); }
+    .handle::after { content:"⋮"; position:absolute; left:16px; top:20px; color:var(--fence); font-size:25px; font-weight:900; line-height:1; }
+    .drag-cue { position:absolute; z-index:3; left:calc(50% + 98px); top:50%; transform:translate(0,-50%); display:flex; align-items:center; gap:8px; color:#c85534; font-size:14px; font-weight:900; white-space:nowrap; pointer-events:none; animation:nudge 1.15s ease-in-out infinite; transition:.3s; }
+    .drag-cue::before { content:"→"; font-size:28px; }
+    .drag-cue.hidden { opacity:0; }
+    @keyframes nudge { 50% { transform:translate(12px,-50%); } }
+    .land.optimal { border-color:#f6bd3f; box-shadow:0 0 0 8px rgba(246,189,63,.2),0 0 28px rgba(246,189,63,.62),inset 0 0 0 2px #fff; }
+    .insight { width:min(100%,380px); min-height:62px; display:flex; align-items:center; justify-content:center; padding:10px 12px; border-radius:7px; text-align:center; font-weight:850; font-size:16px; line-height:1.35; color:#43564d; }
+    .insight.reveal { background:#fff6da; color:#8a511d; }
+
+    .transfer { padding:84px 20px 24px; justify-content:center; }
+    .transfer h2,.finish h2 { margin:0 0 8px; font-size:clamp(25px,7vw,31px); text-align:center; }
+    .transfer p { margin:0 0 28px; color:var(--muted); font-weight:750; }
+    .plots { display:grid; grid-template-columns:1fr 1fr; gap:14px; width:min(100%,390px); }
+    .choice { min-height:210px; border:2px solid #d7d0c1; border-radius:8px; background:var(--white); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; box-shadow:0 4px 0 #d7d0c1; }
+    .shape { background:var(--land); border:6px double var(--fence); }
+    .shape.a { width:120px; height:54px; }
+    .shape.b { width:132px; height:34px; }
+    .choice b { font-size:20px; }
+    .choice small { color:var(--muted); font-weight:700; }
+    .choice.correct { border-color:#70a65b; box-shadow:0 0 0 5px rgba(112,166,91,.16); }
+    .choice.wrong { animation:shake .3s; }
+    @keyframes shake { 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    .transfer-feedback { height:48px; margin-top:18px; text-align:center; font-weight:850; color:#315b42; }
+
+    .finish { padding:90px 24px 34px; justify-content:center; text-align:center; }
+    .finish-mark { width:104px; height:104px; display:grid; place-items:center; margin-bottom:25px; border-radius:50%; background:#f7d56f; color:#315b42; font-size:48px; font-weight:900; box-shadow:0 0 0 12px rgba(247,213,111,.25); }
+    .rule { width:min(100%,350px); margin:18px 0 30px; padding:18px; border-top:2px solid var(--fence); border-bottom:2px solid var(--fence); font-size:18px; font-weight:850; line-height:1.7; }
+    .restart { border:0; border-radius:7px; padding:13px 24px; background:var(--ink); color:white; font-weight:850; cursor:pointer; }
+    @media (max-height:680px) {
+      .explore { padding-top:58px; } .prompt{height:52px;font-size:19px} .metrics{margin-top:0}
+      .plot{min-height:235px}.land-wrap{transform:scale(.84)}.insight{min-height:46px;font-size:14px}
+      .prediction{padding-top:70px}.mini-land{margin:22px 0}.transfer{padding-top:66px}.choice{min-height:180px}
+    }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+  </style>
+</head>
+<body>
+<main class="app" aria-live="polite">
+  <header class="top"><div class="brand">同样一块地</div><div class="step" aria-label="体验进度"><i class="on"></i><i></i><i></i><i></i></div></header>
+
+  <section class="screen prediction active" data-screen="prediction">
+    <div class="question-kicker">先猜一猜</div>
+    <h1>土地大小不变，把长方形拉长，围栏会怎样？</h1>
+    <div class="mini-land" aria-hidden="true"></div>
+    <div class="answers">
+      <button class="answer" data-predict="longer">变长</button>
+      <button class="answer" data-predict="same">不变</button>
+      <button class="answer" data-predict="shorter">变短</button>
+    </div>
+    <div class="quiet">选好先不揭晓，亲手试试看</div>
+  </section>
+
+  <section class="screen explore" data-screen="explore">
+    <div class="prompt" id="prompt">拖住右边，把土地拉长</div>
+    <div class="metrics">
+      <div class="metric"><span>长</span><strong id="widthValue">6 米</strong></div>
+      <div class="metric"><span>宽</span><strong id="heightValue">6 米</strong></div>
+      <div class="metric perimeter" id="perimeterMetric"><span>围栏一圈</span><strong id="perimeterValue">24 米</strong></div>
+    </div>
+    <div class="plot">
+      <div class="land-wrap">
+        <div class="land" id="land">
+          <div class="area-badge"><small>土地面积一直是</small><b>36 m²</b></div>
+          <div class="dimension dim-w" id="dimW">6 米</div>
+          <div class="dimension dim-h" id="dimH">6 米</div>
+          <button class="handle" id="handle" aria-label="横向拖动右边缘改变土地形状"></button>
+        </div>
+      </div>
+      <div class="drag-cue" id="dragCue">拖这里</div>
+    </div>
+    <div class="insight" id="insight">里面始终是 36 m²</div>
+  </section>
+
+  <section class="screen transfer" data-screen="transfer">
+    <h2>马上试一题</h2>
+    <p>面积都是 36 m²，哪个围栏更省？</p>
+    <div class="plots">
+      <button class="choice" data-transfer="4x9"><span class="shape a"></span><b>4 × 9</b><small>点这里选择</small></button>
+      <button class="choice" data-transfer="3x12"><span class="shape b"></span><b>3 × 12</b><small>点这里选择</small></button>
+    </div>
+    <div class="transfer-feedback" id="transferFeedback"></div>
+  </section>
+
+  <section class="screen finish" data-screen="finish">
+    <div class="finish-mark">✓</div>
+    <h2>你发现了！</h2>
+    <div class="rule">面积看里面，周长看外面。<br>同样大的长方形，越接近正方形，围栏越省。</div>
+    <button class="restart">再试一次</button>
+  </section>
+</main>
+<script>
+(() => {
+  'use strict';
+  const AREA = 36;
+  const MIN_LENGTH = 6;
+  const MAX_LENGTH = 12;
+  const DISCOVERY_PERIMETER = 27;
+  const SNAP_DISTANCE = 0.25;
+  const $ = (s) => document.querySelector(s);
+  const screens = [...document.querySelectorAll('.screen')];
+  const steps = [...document.querySelectorAll('.step i')];
+  const land = $('#land');
+  const handle = $('#handle');
+  const cue = $('#dragCue');
+  const prompt = $('#prompt');
+  const insight = $('#insight');
+  const widthValue = $('#widthValue');
+  const heightValue = $('#heightValue');
+  const perimeterValue = $('#perimeterValue');
+  const perimeterMetric = $('#perimeterMetric');
+  const dimW = $('#dimW');
+  const dimH = $('#dimH');
+  const feedback = $('#transferFeedback');
+  const state = { phase:'prediction', prediction:null, length:6, dragging:false, startX:0, startLength:6, discovered:false, returned:false, startTime:performance.now(), firstDragDirection:null };
+
+  function track(event, data={}) {
+    const record = { event, at:Math.round(performance.now()-state.startTime), ...data };
+    const history = JSON.parse(sessionStorage.getItem('areaPerimeterEvents') || '[]');
+    history.push(record); sessionStorage.setItem('areaPerimeterEvents', JSON.stringify(history));
+  }
+  function show(name, step) {
+    state.phase = name;
+    screens.forEach(el => el.classList.toggle('active', el.dataset.screen === name));
+    steps.forEach((el,i) => el.classList.toggle('on', i <= step));
+  }
+  function fmt(n) { return Math.abs(n-Math.round(n)) < .045 ? String(Math.round(n)) : n.toFixed(1); }
+  function visualSize(length) {
+    const ratio = length / (AREA/length);
+    const pixelArea = 31500;
+    return { w:Math.sqrt(pixelArea*ratio), h:Math.sqrt(pixelArea/ratio) };
+  }
+  function render(length, animate=true) {
+    state.length = Math.max(MIN_LENGTH, Math.min(MAX_LENGTH, length));
+    const width = state.length;
+    const height = AREA / width;
+    const perimeter = 2*(width+height);
+    const size = visualSize(width);
+    land.style.width = `${size.w}px`; land.style.height = `${size.h}px`;
+    widthValue.textContent = `${fmt(width)} 米`; heightValue.textContent = `${fmt(height)} 米`; perimeterValue.textContent = `${fmt(perimeter)} 米`;
+    dimW.textContent = `${fmt(width)} 米`; dimH.textContent = `${fmt(height)} 米`;
+    if (animate) { perimeterMetric.classList.remove('bump'); requestAnimationFrame(()=>perimeterMetric.classList.add('bump')); }
+    if (!state.discovered && perimeter >= DISCOVERY_PERIMETER) discover();
+    const nearSquare = state.discovered && Math.abs(width-6) <= SNAP_DISTANCE;
+    land.classList.toggle('optimal', nearSquare);
+    if (nearSquare && !state.returned && !state.dragging) completeSquare();
+  }
+  function discover() {
+    state.discovered = true;
+    prompt.textContent = '地没变多，围栏真的变长了';
+    insight.textContent = '现在往回拖，找找哪种形状最省围栏';
+    insight.classList.add('reveal');
+    track('discovery', { length:+state.length.toFixed(2) });
+    setTimeout(() => { if (state.phase==='explore') prompt.textContent = '把边缘往回拖，寻找最省围栏'; }, 1300);
+  }
+  function completeSquare() {
+    if (state.returned) return;
+    state.returned = true; render(6,false);
+    prompt.textContent = '你找到了最省围栏的形状';
+    insight.textContent = '6 × 6，围栏只要 24 米';
+    if (navigator.vibrate) navigator.vibrate(35);
+    track('optimal_found', { changedPrediction:state.prediction!=='longer' });
+    setTimeout(() => show('transfer',2), 1600);
+  }
+  function pointerDown(e) {
+    if (state.phase!=='explore') return;
+    state.dragging=true; state.startX=e.clientX; state.startLength=state.length; handle.setPointerCapture?.(e.pointerId); cue.classList.add('hidden'); e.preventDefault();
+  }
+  function pointerMove(e) {
+    if (!state.dragging) return;
+    const dx=e.clientX-state.startX;
+    if (!state.firstDragDirection && Math.abs(dx)>8) { state.firstDragDirection=dx>0?'right':'left'; track('first_drag',{direction:state.firstDragDirection}); }
+    render(state.startLength + dx/24); e.preventDefault();
+  }
+  function pointerUp(e) {
+    if (!state.dragging) return;
+    state.dragging=false; handle.releasePointerCapture?.(e.pointerId);
+    if (state.discovered && Math.abs(state.length-6)<=SNAP_DISTANCE) render(6,false);
+    track('drag_end',{length:+state.length.toFixed(2),perimeter:+(2*(state.length+AREA/state.length)).toFixed(2)});
+  }
+  document.querySelectorAll('[data-predict]').forEach(btn => btn.addEventListener('click', () => {
+    state.prediction=btn.dataset.predict; track('prediction',{choice:state.prediction}); show('explore',1); render(6,false);
+  }));
+  handle.addEventListener('pointerdown', pointerDown); window.addEventListener('pointermove', pointerMove,{passive:false}); window.addEventListener('pointerup',pointerUp);
+  document.querySelectorAll('[data-transfer]').forEach(btn => btn.addEventListener('click', () => {
+    const answer=btn.dataset.transfer; const correct=answer==='4x9';
+    document.querySelectorAll('.choice').forEach(x=>x.classList.remove('correct','wrong'));
+    btn.classList.add(correct?'correct':'wrong');
+    feedback.textContent=correct?'对！4 × 9 的围栏是 26 米，更省。':'算一圈看看：3 × 12 需要 30 米。';
+    track('transfer_answer',{answer,correct});
+    if (correct) setTimeout(()=>show('finish',3),1200);
+  }));
+  $('.restart').addEventListener('click',()=>location.reload());
+  document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+  render(6,false);
+  window.__AREA_PERIMETER_TEST__ = { AREA, render, state, metrics:()=>({width:state.length,height:AREA/state.length,perimeter:2*(state.length+AREA/state.length)}) };
+})();
+</script>
+</body>
+</html>
