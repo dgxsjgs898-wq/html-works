@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="智学未来 AI家庭成长伙伴计划——连接AI科技、家庭教育与儿童成长的新型教育伙伴计划。">
+  <title>智学未来｜AI家庭成长伙伴计划</title>
+  <style>
+    :root{
+      --ink:#f6fbff;--muted:#9eb4c9;--cyan:#6de7ff;--blue:#4b8cff;--mint:#70f4c1;
+      --warm:#ffcb91;--night:#06101d;--line:rgba(145,211,255,.18);--glass:rgba(12,30,49,.58);
+      --ease:cubic-bezier(.22,.8,.22,1);--radius:24px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--night)}
+    body{margin:0;color:var(--ink);background:var(--night);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    button,input{font:inherit}
+    button{-webkit-tap-highlight-color:transparent}
+    canvas#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.7}
+    .page-glow{position:fixed;inset:-25%;z-index:0;pointer-events:none;background:radial-gradient(circle at 58% 24%,rgba(43,121,213,.14),transparent 27%),radial-gradient(circle at 22% 72%,rgba(63,232,194,.08),transparent 25%)}
+    .topbar{position:fixed;z-index:30;top:0;left:0;right:0;height:64px;padding:calc(11px + env(safe-area-inset-top)) 18px 10px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(6,16,29,.82),transparent);pointer-events:none}
+    .brand{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:650;letter-spacing:.08em}
+    .brand-mark{width:27px;height:27px;border:1px solid rgba(109,231,255,.55);border-radius:9px;position:relative;box-shadow:inset 0 0 16px rgba(75,140,255,.26),0 0 16px rgba(109,231,255,.12)}
+    .brand-mark:before,.brand-mark:after{content:"";position:absolute;border-radius:50%;background:var(--cyan);box-shadow:0 0 9px var(--cyan)}
+    .brand-mark:before{width:5px;height:5px;left:6px;top:7px}.brand-mark:after{width:4px;height:4px;right:5px;bottom:6px}
+    .chapter{font:500 10px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);letter-spacing:.16em}
+    .progress{position:fixed;z-index:35;top:0;left:0;width:100%;height:2px;background:rgba(255,255,255,.06)}
+    .progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--cyan),var(--mint));box-shadow:0 0 14px var(--cyan);transition:width .15s linear}
+    main{position:relative;z-index:1}
+    .scene{min-height:100vh;min-height:100svh;padding:96px 24px 54px;display:flex;position:relative;overflow:hidden;isolation:isolate}
+    .inner{width:min(100%,560px);margin:auto;position:relative;z-index:2}
+    .eyebrow{margin:0 0 15px;color:var(--cyan);font-size:11px;font-weight:700;letter-spacing:.23em;text-transform:uppercase}
+    h1,h2,h3,p{margin-top:0}
+    h1{font-size:clamp(42px,12vw,68px);line-height:1.08;letter-spacing:-.055em;margin-bottom:21px;font-weight:710}
+    h2{font-size:clamp(31px,8.7vw,48px);line-height:1.14;letter-spacing:-.045em;margin-bottom:18px;font-weight:680}
+    .lead{color:#c8d7e6;font-size:16px;line-height:1.75;letter-spacing:.02em}
+    .gradient-text{color:transparent;background:linear-gradient(112deg,#fff 10%,var(--cyan) 50%,var(--mint));-webkit-background-clip:text;background-clip:text}
+    .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+    .reveal.delay-1{transition-delay:.12s}.reveal.delay-2{transition-delay:.24s}.reveal.delay-3{transition-delay:.36s}
+    .scene.active .reveal{opacity:1;transform:none}
+    .glass{border:1px solid var(--line);background:linear-gradient(145deg,rgba(19,44,68,.66),rgba(8,21,35,.5));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 24px 80px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.06)}
+
+    /* 01 */
+    #s1{padding-bottom:36px;background:radial-gradient(circle at 54% 50%,rgba(54,139,218,.16),transparent 36%)}
+    #s1 .inner{margin-top:auto;margin-bottom:10px}
+    .hero-kicker{display:flex;align-items:center;gap:8px;color:#bad2e7;font-size:13px;margin-bottom:20px}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 0 5px rgba(112,244,193,.1),0 0 12px var(--mint);animation:pulse 2s infinite}
+    .family-universe{height:280px;position:relative;margin:10px -12px 8px}
+    .ai-core{position:absolute;width:72px;height:72px;border-radius:50%;left:50%;top:43%;transform:translate(-50%,-50%);background:radial-gradient(circle at 35% 30%,#fff 0 4%,#88f4ff 10%,#2378da 48%,rgba(20,55,97,.25) 70%);box-shadow:0 0 30px rgba(109,231,255,.7),0 0 90px rgba(75,140,255,.42);animation:coreBreath 3.8s ease-in-out infinite}
+    .ai-core:before,.ai-core:after{content:"";position:absolute;border:1px solid rgba(109,231,255,.34);border-radius:50%;inset:-22px;animation:orbitPulse 3s ease-out infinite}.ai-core:after{inset:-47px;animation-delay:1.2s}
+    .family-node{position:absolute;width:72px;text-align:center;color:#dcebf5;font-size:12px}
+    .family-node i{display:flex;margin:0 auto 8px;width:47px;height:47px;border-radius:17px;border:1px solid rgba(255,255,255,.16);background:rgba(13,34,55,.8);align-items:center;justify-content:center;font-style:normal;font-size:20px;box-shadow:0 12px 24px rgba(0,0,0,.18)}
+    .family-node.parent{left:7%;top:16%}.family-node.child{right:7%;top:15%}.family-node.home{left:calc(50% - 36px);bottom:2%}
+    .connect{position:absolute;height:1px;transform-origin:left;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.55;filter:drop-shadow(0 0 5px var(--cyan));animation:signal 2.8s linear infinite}
+    .connect.a{width:38%;left:20%;top:32%;transform:rotate(16deg)}.connect.b{width:38%;left:49%;top:45%;transform:rotate(-23deg);animation-delay:.7s}.connect.c{width:29%;left:50%;top:49%;transform:rotate(90deg);animation-delay:1.4s}
+    .scroll-hint{display:flex;align-items:center;gap:10px;color:#8299ad;font-size:11px;letter-spacing:.12em;margin-top:15px}.scroll-hint:before{content:"";width:20px;height:32px;border:1px solid rgba(168,210,238,.35);border-radius:12px}.scroll-hint:after{content:"";position:absolute;margin-left:9px;margin-top:-10px;width:2px;height:6px;border-radius:2px;background:var(--cyan);animation:scrollDrop 1.8s infinite}
+
+    /* 02 */
+    .shift-stage{margin-top:34px;padding:25px 20px;border-radius:28px}
+    .era{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .era-block{flex:1}.era-block small{display:block;color:#7891a6;font-size:10px;letter-spacing:.12em;margin-bottom:8px}.era-block strong{font-size:18px;display:block}.era-block.future strong{color:var(--cyan)}
+    .era-arrow{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--cyan);background:rgba(109,231,255,.08);border:1px solid rgba(109,231,255,.2)}
+    .era-track{height:4px;border-radius:4px;background:rgba(255,255,255,.07);margin-top:28px;overflow:hidden}.era-track span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--blue),var(--cyan),var(--mint));box-shadow:0 0 13px var(--cyan);transition:width 1.5s .35s var(--ease)}
+    #s2.active .era-track span{width:100%}
+    .era-caption{margin:17px 0 0;color:var(--muted);font-size:13px;line-height:1.65}
+
+    /* 03 */
+    .question-list{display:grid;gap:13px;margin-top:32px}
+    .question{border-radius:22px;padding:19px;display:grid;grid-template-columns:45px 1fr;gap:14px;align-items:center}
+    .question:nth-child(2){margin-left:18px}.question:nth-child(3){margin-left:36px;border-color:rgba(109,231,255,.28)}
+    .qicon{width:45px;height:45px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(75,140,255,.18),rgba(112,244,193,.08));font-size:19px}
+    .question small{display:block;color:var(--cyan);font-size:10px;letter-spacing:.16em;margin-bottom:5px}.question p{margin:0;font-size:16px;line-height:1.45;color:#eaf5fc}
+
+    /* 04 */
+    .partner-list{display:grid;gap:12px;margin-top:28px}
+    .partner{border-radius:22px;overflow:hidden;transition:border-color .3s,background .3s}
+    .partner button{border:0;color:inherit;background:transparent;width:100%;padding:18px;display:grid;grid-template-columns:46px 1fr 28px;gap:13px;align-items:center;text-align:left;cursor:pointer}
+    .picon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:rgba(109,231,255,.09);border:1px solid rgba(109,231,255,.15);font-size:20px}
+    .partner h3{margin:0 0 4px;font-size:17px}.partner .summary{margin:0;color:var(--muted);font-size:12px}.plus{font-size:24px;font-weight:200;color:var(--cyan);transition:transform .35s}
+    .partner-detail{max-height:0;overflow:hidden;color:#b9ccdc;font-size:13px;line-height:1.7;padding:0 18px 0 77px;transition:max-height .45s var(--ease),padding .45s var(--ease)}
+    .partner.open{border-color:rgba(109,231,255,.36);background:linear-gradient(145deg,rgba(18,50,77,.78),rgba(8,21,35,.64))}.partner.open .plus{transform:rotate(45deg)}.partner.open .partner-detail{max-height:110px;padding-bottom:18px}
+
+    /* 05 */
+    .ecosystem{height:360px;position:relative;margin:12px -8px 0}
+    .eco-core{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);width:130px;height:130px;border-radius:50%;display:grid;place-items:center;text-align:center;font-size:16px;font-weight:680;line-height:1.35;background:radial-gradient(circle at 40% 25%,rgba(117,235,255,.34),rgba(27,84,138,.42) 45%,rgba(10,28,46,.92) 72%);border:1px solid rgba(109,231,255,.48);box-shadow:0 0 42px rgba(75,140,255,.28),inset 0 0 30px rgba(109,231,255,.08)}
+    .eco-core small{display:block;font-size:9px;font-weight:500;letter-spacing:.16em;color:var(--cyan);margin-bottom:5px}
+    .eco-ring{position:absolute;border:1px solid rgba(109,231,255,.14);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%)}.eco-ring.r1{width:240px;height:240px}.eco-ring.r2{width:336px;height:336px;border-style:dashed;animation:spin 28s linear infinite}
+    .eco-item{position:absolute;z-index:3;padding:9px 12px;border:1px solid rgba(137,209,249,.18);border-radius:14px;background:rgba(9,25,41,.83);font-size:12px;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+    .eco-item:before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);margin-right:7px;vertical-align:2px}
+    .e1{left:4%;top:19%}.e2{right:0;top:22%}.e3{left:0;bottom:18%}.e4{right:2%;bottom:14%}.e5{left:50%;transform:translateX(-50%);bottom:0}
+
+    /* 06 */
+    .dimension-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}
+    .dimension{min-height:130px;border-radius:22px;padding:17px;position:relative;overflow:hidden}.dimension:first-child{grid-column:span 2;min-height:146px;background:linear-gradient(145deg,rgba(31,88,135,.56),rgba(9,25,41,.52))}.dimension:after{content:"";position:absolute;width:70px;height:70px;border:1px solid rgba(109,231,255,.16);border-radius:50%;right:-20px;bottom:-20px;box-shadow:0 0 0 13px rgba(109,231,255,.025),0 0 0 27px rgba(109,231,255,.018)}
+    .dim-no{font:600 10px/1 ui-monospace,SFMono-Regular,monospace;color:var(--cyan);letter-spacing:.14em}.dimension h3{font-size:16px;margin:27px 0 6px}.dimension p{font-size:11px;color:var(--muted);line-height:1.55;margin:0;max-width:86%}
+
+    /* 07 */
+    .roles{display:grid;gap:13px;margin-top:30px}.role{border-radius:23px;padding:20px;display:grid;grid-template-columns:58px 1fr;gap:16px;align-items:center}.role-num{width:58px;height:58px;border-radius:20px;display:grid;place-items:center;color:var(--cyan);font:600 13px/1 ui-monospace,monospace;background:linear-gradient(145deg,rgba(109,231,255,.13),rgba(75,140,255,.04));border:1px solid rgba(109,231,255,.18)}.role h3{font-size:18px;margin:0 0 5px}.role p{color:var(--muted);font-size:12px;line-height:1.55;margin:0}
+
+    /* 08 */
+    .pathway{margin:34px 0 0 12px;position:relative}.pathway:before{content:"";position:absolute;left:21px;top:20px;bottom:28px;width:1px;background:linear-gradient(var(--blue),var(--cyan),var(--mint));box-shadow:0 0 10px rgba(109,231,255,.46)}
+    .step{position:relative;display:grid;grid-template-columns:44px 1fr;gap:17px;align-items:center;margin-bottom:19px}.step-dot{position:relative;z-index:2;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#0b2035;border:1px solid rgba(109,231,255,.38);color:var(--cyan);font:600 11px/1 ui-monospace,monospace;box-shadow:0 0 0 7px rgba(6,16,29,.9)}.step-card{padding:16px 18px;border-radius:18px}.step-card strong{display:block;font-size:17px;margin-bottom:4px}.step-card small{color:var(--muted);font-size:11px}
+    .scene.active .step-dot{animation:stepGlow 2.6s var(--ease) both}.scene.active .step:nth-child(2) .step-dot{animation-delay:.25s}.scene.active .step:nth-child(3) .step-dot{animation-delay:.5s}.scene.active .step:nth-child(4) .step-dot{animation-delay:.75s}
+
+    /* 09 */
+    .city-map{height:340px;position:relative;margin:15px -18px 0;perspective:600px}.city-grid{position:absolute;inset:38px -30px -70px;background-image:linear-gradient(rgba(87,179,235,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(87,179,235,.12) 1px,transparent 1px);background-size:34px 34px;transform:rotateX(61deg);mask-image:linear-gradient(to bottom,transparent,#000 25%,#000 70%,transparent)}
+    .tower{position:absolute;bottom:36px;width:28px;border:1px solid rgba(109,231,255,.22);border-bottom:0;background:linear-gradient(90deg,rgba(26,76,113,.3),rgba(56,147,195,.1));box-shadow:inset 0 0 12px rgba(109,231,255,.05)}.tower:before{content:"";position:absolute;inset:8px 5px;background:repeating-linear-gradient(to bottom,var(--cyan) 0 2px,transparent 2px 9px);opacity:.25}.t1{height:105px;left:7%}.t2{height:158px;left:22%;width:39px}.t3{height:84px;left:44%}.t4{height:135px;right:29%;width:35px}.t5{height:184px;right:9%;width:45px}
+    .map-node{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 6px rgba(109,231,255,.08),0 0 18px var(--cyan);animation:nodeBeat 2.3s infinite}.n1{left:10%;top:21%}.n2{left:30%;top:54%;animation-delay:.5s}.n3{left:50%;top:30%;animation-delay:1s}.n4{right:24%;top:55%;animation-delay:1.5s}.n5{right:8%;top:19%;animation-delay:.8s}
+    .netline{position:absolute;height:1px;background:linear-gradient(90deg,var(--cyan),rgba(109,231,255,.18));transform-origin:left;filter:drop-shadow(0 0 3px var(--cyan));opacity:.44}.l1{width:31%;left:12%;top:25%;transform:rotate(37deg)}.l2{width:33%;left:32%;top:55%;transform:rotate(-32deg)}.l3{width:31%;left:52%;top:33%;transform:rotate(30deg)}.l4{width:25%;left:70%;top:55%;transform:rotate(-36deg)}
+    .network-equation{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:-8px;font-size:13px;color:#cee3f0}.network-equation b{color:var(--cyan);font-size:18px;font-weight:400}
+
+    /* 10 */
+    #s10{text-align:center;background:radial-gradient(circle at 50% 47%,rgba(57,154,214,.22),transparent 35%)}
+    #s10 .inner{display:flex;min-height:72vh;flex-direction:column;align-items:center;justify-content:center}.final-orb{width:104px;height:104px;border-radius:50%;margin-bottom:32px;background:radial-gradient(circle at 37% 30%,#fff 0 2%,#9bf2ff 7%,#347dcc 36%,#102b49 70%);box-shadow:0 0 45px rgba(109,231,255,.45),0 0 110px rgba(75,140,255,.24);animation:finalBreath 3.5s ease-in-out infinite}.final-copy{max-width:390px;margin-left:auto;margin-right:auto}.cta{margin-top:29px;width:min(100%,310px);height:58px;border:0;border-radius:19px;color:#06111c;font-weight:730;font-size:16px;letter-spacing:.05em;background:linear-gradient(110deg,#dffbff,var(--cyan) 52%,var(--mint));box-shadow:0 14px 35px rgba(64,204,224,.24),inset 0 1px 0 #fff;cursor:pointer;transition:transform .2s,box-shadow .2s}.cta:active{transform:scale(.97)}.cta-note{font-size:11px;color:#7992a8;margin-top:14px}.mission{margin-top:54px;color:#8ca4b7;font-size:11px;line-height:1.8;letter-spacing:.08em}
+
+    /* modal */
+    .modal{position:fixed;z-index:80;inset:0;display:none;align-items:flex-end;justify-content:center;background:rgba(2,8,14,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:0}.modal.show{display:flex}.modal-card{width:min(100%,560px);border:1px solid rgba(145,211,255,.2);border-radius:28px 28px 0 0;background:#0b1b2b;padding:24px 22px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -20px 80px rgba(0,0,0,.36);animation:sheetUp .45s var(--ease)}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.modal-head h3{font-size:20px;margin:0}.close{width:36px;height:36px;border:0;border-radius:50%;color:#c9d8e4;background:rgba(255,255,255,.07);font-size:22px;cursor:pointer}.form-row{display:grid;gap:8px;margin-bottom:13px;text-align:left}.form-row label{font-size:11px;color:#8fa8bc;letter-spacing:.08em}.form-row input{width:100%;height:50px;border-radius:15px;border:1px solid rgba(145,211,255,.16);background:rgba(5,16,27,.72);padding:0 15px;color:#fff;outline:none}.form-row input:focus{border-color:rgba(109,231,255,.58);box-shadow:0 0 0 3px rgba(109,231,255,.07)}.submit{width:100%;height:54px;border:0;border-radius:17px;background:linear-gradient(105deg,var(--cyan),var(--mint));color:#07141f;font-weight:720;margin-top:7px;cursor:pointer}.privacy{font-size:10px;color:#6e879b;line-height:1.6;margin:12px 3px 0}.success{display:none;padding:16px 0 6px}.success.show{display:block}.success-mark{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:rgba(112,244,193,.1);border:1px solid rgba(112,244,193,.35);color:var(--mint);font-size:30px}.success h3{text-align:center}.success p{text-align:center;color:var(--muted);line-height:1.7;font-size:13px}.form-wrap.hide{display:none}
+
+    @keyframes pulse{50%{opacity:.5;transform:scale(.88)}}
+    @keyframes coreBreath{50%{transform:translate(-50%,-50%) scale(1.07);filter:saturate(1.2)}}
+    @keyframes finalBreath{50%{transform:scale(1.07);filter:saturate(1.2)}}
+    @keyframes orbitPulse{0%{transform:scale(.72);opacity:0}40%{opacity:.7}100%{transform:scale(1.18);opacity:0}}
+    @keyframes signal{0%{background-position:-150px 0}100%{background-position:150px 0}}
+    @keyframes scrollDrop{0%{transform:translateY(0);opacity:0}30%{opacity:1}100%{transform:translateY(11px);opacity:0}}
+    @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+    @keyframes stepGlow{0%{box-shadow:0 0 0 7px rgba(6,16,29,.9)}50%{box-shadow:0 0 0 7px rgba(6,16,29,.9),0 0 25px rgba(109,231,255,.7)}100%{box-shadow:0 0 0 7px rgba(6,16,29,.9)}}
+    @keyframes nodeBeat{50%{transform:scale(.72);opacity:.65}}
+    @keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+    @media(min-width:760px){.scene{padding-left:40px;padding-right:40px}.inner{width:min(100%,620px)}h1{font-size:64px}.modal{align-items:center;padding:24px}.modal-card{border-radius:28px}.family-universe{height:320px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
+  </style>
+</head>
+<body>
+  <canvas id="stars" aria-hidden="true"></canvas><div class="page-glow" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+  <header class="topbar"><div class="brand"><span class="brand-mark"></span><span>智学未来</span></div><div class="chapter" id="chapter">01 / 10</div></header>
+  <main>
+    <section class="scene" id="s1" data-index="1" aria-labelledby="title1"><div class="inner">
+      <div class="hero-kicker reveal"><span class="live-dot"></span>AI FAMILY GROWTH · 2026</div>
+      <h1 id="title1" class="reveal delay-1">AI时代<br><span class="gradient-text">家庭教育<br>正在重新开始</span></h1>
+      <p class="lead reveal delay-2">智学未来<br>AI家庭成长伙伴计划</p>
+      <div class="family-universe reveal delay-3" aria-label="父母、孩子与AI智能体形成连接的家庭未来场景">
+        <span class="connect a"></span><span class="connect b"></span><span class="connect c"></span><div class="ai-core" aria-hidden="true"></div>
+        <div class="family-node parent"><i>陪</i>父母</div><div class="family-node child"><i>学</i>孩子</div><div class="family-node home"><i>AI</i>智能体</div>
+      </div>
+      <div class="scroll-hint reveal delay-3">向上滑动 · 进入未来</div>
+    </div></section>
+
+    <section class="scene" id="s2" data-index="2" aria-labelledby="title2"><div class="inner">
+      <p class="eyebrow reveal">THE SHIFT · 时代变化</p><h2 id="title2" class="reveal delay-1">孩子拥有更多信息，<br><span class="gradient-text">却更需要成长陪伴。</span></h2>
+      <p class="lead reveal delay-2">答案触手可及以后，真正稀缺的，是理解、引导与一起成长。</p>
+      <div class="shift-stage glass reveal delay-3"><div class="era"><div class="era-block"><small>PAST</small><strong>知识获取时代</strong></div><div class="era-arrow">→</div><div class="era-block future"><small>NEXT</small><strong>AI陪伴时代</strong></div></div><div class="era-track"><span></span></div><p class="era-caption">从“告诉孩子答案”，走向“陪孩子发现自己”。</p></div>
+    </div></section>
+
+    <section class="scene" id="s3" data-index="3" aria-labelledby="title3"><div class="inner">
+      <p class="eyebrow reveal">REAL LIFE · 家庭真实场景</p><h2 id="title3" class="reveal delay-1">每个家庭，都在寻找<br><span class="gradient-text">更好的连接方式。</span></h2>
+      <div class="question-list"><div class="question glass reveal delay-1"><div class="qicon">孩</div><div><small>孩子</small><p>“我遇到问题怎么办？”</p></div></div><div class="question glass reveal delay-2"><div class="qicon">家</div><div><small>家长</small><p>“如何真正帮助孩子？”</p></div></div><div class="question glass reveal delay-3"><div class="qicon">未</div><div><small>未来</small><p>“谁连接AI与家庭？”</p></div></div></div>
+    </div></section>
+
+    <section class="scene" id="s4" data-index="4" aria-labelledby="title4"><div class="inner">
+      <p class="eyebrow reveal">AI COMPANION · AI成长伙伴</p><h2 id="title4" class="reveal delay-1">不是简单问答，<br>是<span class="gradient-text">持续成长的陪伴。</span></h2>
+      <p class="lead reveal delay-2">点击模块，了解每一种陪伴。</p>
+      <div class="partner-list reveal delay-3">
+        <article class="partner glass"><button type="button" aria-expanded="false"><span class="picon">学</span><span><h3>学习伙伴</h3><p class="summary">启发思路 · 方法引导 · 自主探索</p></span><span class="plus">＋</span></button><div class="partner-detail">围绕问题与方法展开对话，让孩子学会提问、理解与迁移，而不只是得到一个答案。</div></article>
+        <article class="partner glass"><button type="button" aria-expanded="false"><span class="picon">心</span><span><h3>情绪伙伴</h3><p class="summary">倾听表达 · 正向反馈 · 温柔支持</p></span><span class="plus">＋</span></button><div class="partner-detail">为情绪提供安全的表达入口，以积极认知和适龄引导，帮助孩子看见自己的感受。</div></article>
+        <article class="partner glass"><button type="button" aria-expanded="false"><span class="picon">长</span><span><h3>成长伙伴</h3><p class="summary">发现优势 · 习惯养成 · 长期陪跑</p></span><span class="plus">＋</span></button><div class="partner-detail">连接能力训练、成长活动与家庭支持，让每一次微小进步，都成为可持续的成长轨迹。</div></article>
+      </div>
+    </div></section>
+
+    <section class="scene" id="s5" data-index="5" aria-labelledby="title5"><div class="inner">
+      <p class="eyebrow reveal">ECOSYSTEM · 智学未来生态</p><h2 id="title5" class="reveal delay-1">一个系统，连接<br><span class="gradient-text">家庭成长的每一环。</span></h2>
+      <div class="ecosystem reveal delay-2" aria-label="以AI家庭成长系统为中心的五项生态能力"><div class="eco-ring r1"></div><div class="eco-ring r2"></div><div class="eco-core"><div><small>CORE SYSTEM</small>AI家庭<br>成长系统</div></div><span class="eco-item e1">AI智能体</span><span class="eco-item e2">能力训练</span><span class="eco-item e3">成长活动</span><span class="eco-item e4">父母课堂</span><span class="eco-item e5">伙伴网络</span></div>
+    </div></section>
+
+    <section class="scene" id="s6" data-index="6" aria-labelledby="title6"><div class="inner">
+      <p class="eyebrow reveal">FIVE DIMENSIONS · 五维体系</p><h2 id="title6" class="reveal delay-1">从一次体验，走向<br><span class="gradient-text">完整成长闭环。</span></h2>
+      <div class="dimension-grid"><article class="dimension glass reveal delay-1"><span class="dim-no">01 · CORE</span><h3>AI智能体陪伴</h3><p>让学习提问、情绪表达与日常成长，随时都有回应。</p></article><article class="dimension glass reveal delay-1"><span class="dim-no">02</span><h3>脑力能力训练</h3><p>专注、记忆、思维与灵感。</p></article><article class="dimension glass reveal delay-2"><span class="dim-no">03</span><h3>成长活动</h3><p>在真实体验中打开视野。</p></article><article class="dimension glass reveal delay-2"><span class="dim-no">04</span><h3>学习习惯培养</h3><p>把方法变成自主学习力。</p></article><article class="dimension glass reveal delay-3"><span class="dim-no">05</span><h3>父母课堂</h3><p>父母同频，家庭共同成长。</p></article></div>
+    </div></section>
+
+    <section class="scene" id="s7" data-index="7" aria-labelledby="title7"><div class="inner">
+      <p class="eyebrow reveal">NEW ROLE · 伙伴角色</p><h2 id="title7" class="reveal delay-1">AI时代，需要新的<br><span class="gradient-text">教育连接者。</span></h2>
+      <p class="lead reveal delay-2">懂科技，也懂教育；连接孩子，也连接家庭与城市。</p>
+      <div class="roles"><article class="role glass reveal delay-1"><div class="role-num">01</div><div><h3>教育伙伴</h3><p>理解成长规律，用专业方法陪伴学习与能力发展。</p></div></article><article class="role glass reveal delay-2"><div class="role-num">02</div><div><h3>家庭伙伴</h3><p>倾听真实需求，让科技进入温暖、可信任的家庭场景。</p></div></article><article class="role glass reveal delay-3"><div class="role-num">03</div><div><h3>城市伙伴</h3><p>连接本地家庭与成长资源，让优质服务离每个孩子更近。</p></div></article></div>
+    </div></section>
+
+    <section class="scene" id="s8" data-index="8" aria-labelledby="title8"><div class="inner">
+      <p class="eyebrow reveal">YOUR PATH · 成长路径</p><h2 id="title8" class="reveal delay-1">学习、实践、连接，<br><span class="gradient-text">成为成长伙伴。</span></h2>
+      <div class="pathway"><div class="step reveal delay-1"><div class="step-dot">01</div><div class="step-card glass"><strong>认识AI</strong><small>理解科技如何服务家庭成长</small></div></div><div class="step reveal delay-1"><div class="step-dot">02</div><div class="step-card glass"><strong>学习体系</strong><small>掌握五维成长系统与陪伴方法</small></div></div><div class="step reveal delay-2"><div class="step-dot">03</div><div class="step-card glass"><strong>服务家庭</strong><small>从体验出发，回应真实需求</small></div></div><div class="step reveal delay-3"><div class="step-dot">04</div><div class="step-card glass"><strong>成为成长伙伴</strong><small>在持续实践中，与家庭共同成长</small></div></div></div>
+    </div></section>
+
+    <section class="scene" id="s9" data-index="9" aria-labelledby="title9"><div class="inner">
+      <p class="eyebrow reveal">CONNECTED CITY · 未来图景</p><h2 id="title9" class="reveal delay-1">每一盏灯，都是一个<br><span class="gradient-text">正在成长的家庭。</span></h2>
+      <div class="city-map reveal delay-2"><div class="city-grid"></div><span class="tower t1"></span><span class="tower t2"></span><span class="tower t3"></span><span class="tower t4"></span><span class="tower t5"></span><span class="map-node n1"></span><span class="map-node n2"></span><span class="map-node n3"></span><span class="map-node n4"></span><span class="map-node n5"></span><span class="netline l1"></span><span class="netline l2"></span><span class="netline l3"></span><span class="netline l4"></span></div>
+      <div class="network-equation reveal delay-3"><span>家庭</span><b>×</b><span>AI</span><b>×</b><span>成长伙伴</span><b>＝</b><span class="gradient-text">成长网络</span></div>
+    </div></section>
+
+    <section class="scene" id="s10" data-index="10" aria-labelledby="title10"><div class="inner">
+      <div class="final-orb reveal" aria-hidden="true"></div><p class="eyebrow reveal">THE NEXT CHAPTER</p><h2 id="title10" class="final-copy reveal delay-1">加入<br><span class="gradient-text">AI家庭成长伙伴计划</span></h2><p class="lead final-copy reveal delay-2">让科技更懂成长，让每个家庭都拥有面向未来的陪伴。</p><button class="cta reveal delay-3" type="button" id="reserveBtn">预约体验&nbsp; →</button><p class="cta-note reveal delay-3">了解体系 · 体验产品 · 认识伙伴角色</p><p class="mission reveal delay-3">以生为本 · 科技向善<br>智学未来（浙江）数智科技有限公司</p>
+    </div></section>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="form-wrap" id="formWrap"><div class="modal-head"><h3 id="modalTitle">预约AI家庭成长体验</h3><button class="close" id="closeBtn" type="button" aria-label="关闭">×</button></div><form id="reserveForm"><div class="form-row"><label for="name">怎么称呼您</label><input id="name" name="name" required maxlength="20" autocomplete="name" placeholder="请输入姓名"></div><div class="form-row"><label for="phone">联系电话</label><input id="phone" name="phone" required inputmode="tel" autocomplete="tel" pattern="1[3-9][0-9]{9}" placeholder="请输入11位手机号码"></div><div class="form-row"><label for="city">所在城市</label><input id="city" name="city" required maxlength="30" autocomplete="address-level2" placeholder="例如：杭州"></div><button class="submit" type="submit">提交体验意向</button><p class="privacy">演示版说明：信息仅保存在当前设备，不会上传至网络。正式上线时可对接企业微信、表单或CRM。</p></form></div><div class="success" id="success"><div class="success-mark">✓</div><h3>预约意向已记录</h3><p>感谢关注智学未来。<br>正式版本接入服务端后，成长顾问将与您联系。</p><button class="submit" id="doneBtn" type="button">完成</button></div></div></div>
+
+  <script>
+    (()=>{
+      const scenes=[...document.querySelectorAll('.scene')],progress=document.getElementById('progressBar'),chapter=document.getElementById('chapter');
+      const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('active');chapter.textContent=String(e.target.dataset.index).padStart(2,'0')+' / 10'}}),{threshold:.25});
+      scenes.forEach(s=>observer.observe(s));
+      const updateProgress=()=>{const h=document.documentElement.scrollHeight-innerHeight;progress.style.width=(h?scrollY/h*100:0)+'%'};addEventListener('scroll',updateProgress,{passive:true});updateProgress();
+      document.querySelectorAll('.partner button').forEach(btn=>btn.addEventListener('click',()=>{const item=btn.closest('.partner'),open=item.classList.contains('open');document.querySelectorAll('.partner').forEach(p=>{p.classList.remove('open');p.querySelector('button').setAttribute('aria-expanded','false')});if(!open){item.classList.add('open');btn.setAttribute('aria-expanded','true')}}));
+      const modal=document.getElementById('modal'),openBtn=document.getElementById('reserveBtn'),closeBtn=document.getElementById('closeBtn'),doneBtn=document.getElementById('doneBtn'),form=document.getElementById('reserveForm'),formWrap=document.getElementById('formWrap'),success=document.getElementById('success');
+      const openModal=()=>{modal.classList.add('show');document.body.style.overflow='hidden';setTimeout(()=>document.getElementById('name').focus(),200)};
+      const closeModal=()=>{modal.classList.remove('show');document.body.style.overflow='';openBtn.focus()};openBtn.addEventListener('click',openModal);closeBtn.addEventListener('click',closeModal);doneBtn.addEventListener('click',closeModal);modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('show'))closeModal()});
+      form.addEventListener('submit',e=>{e.preventDefault();const data=Object.fromEntries(new FormData(form));try{localStorage.setItem('zhixue-future-demo-reservation',JSON.stringify({...data,time:new Date().toISOString()}))}catch(_){}formWrap.classList.add('hide');success.classList.add('show')});
+      const canvas=document.getElementById('stars'),ctx=canvas.getContext('2d');let dots=[],raf;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const resize=()=>{const d=Math.min(devicePixelRatio||1,2);canvas.width=innerWidth*d;canvas.height=innerHeight*d;ctx.setTransform(d,0,0,d,0,0);dots=Array.from({length:Math.min(60,Math.floor(innerWidth/8))},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.3+.2,v:Math.random()*.16+.04,a:Math.random()*.55+.12}))};
+      const draw=()=>{ctx.clearRect(0,0,innerWidth,innerHeight);for(const p of dots){ctx.beginPath();ctx.fillStyle=`rgba(137,224,255,${p.a})`;ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();if(!reduced){p.y-=p.v;if(p.y<-2){p.y=innerHeight+2;p.x=Math.random()*innerWidth}}}raf=requestAnimationFrame(draw)};
+      resize();draw();addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();draw()},{passive:true});
+    })();
+  </script>
+</body>
+</html>

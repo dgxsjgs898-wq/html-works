@@ -14,6 +14,7 @@ docs/<英文短名>/index.html
 
 ## 当前作品
 
+- `zhixue-future`：智学未来 AI 家庭成长伙伴计划
 - `reflection-target`：反射打靶
 - `fraction-cut-king`：分数切割王
 - `ratio-color-master`：比例调色师
